@@ -1,0 +1,11 @@
+sector = "NS"
+graph = "theta"
+b = "7/5"
+momenta = ["23/100", "37/100", "41/100"]
+forms = [0, 0]
+primary_parities = [0, 0, 0]
+precision_bits = 136
+
+[cutoff]
+kind = "total"
+level = 3

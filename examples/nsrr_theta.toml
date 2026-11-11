@@ -1,0 +1,13 @@
+graph = "theta"
+sector = "NSRR"
+precision_bits = 136
+b = "7/5"
+momenta = ["23/100", "37/100", "41/100"]
+ramond = [false, true, true]
+primary_parities = [0, 0, 0]
+forms = [0, 0]
+eta = [1, 1]
+
+[cutoff]
+kind = "total"
+level = 3

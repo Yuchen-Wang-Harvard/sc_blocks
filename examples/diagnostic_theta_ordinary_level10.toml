@@ -1,0 +1,16 @@
+# Diagnostic only: retain the numerical result and all recovery residuals.
+# This file cannot be used to claim a validated benchmark.
+graph = "theta"
+sector = "NSRR"
+precision_bits = 136
+recovery_policy = "record"
+b = "7/5"
+momenta = ["11/23", "13/29", "17/31"]
+ramond = [false, true, true]
+primary_parities = [0, 0, 0]
+forms = [0, 0]
+eta = [1, 1]
+
+[cutoff]
+kind = "per_edge"
+level = 10

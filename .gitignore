@@ -1,0 +1,10 @@
+# Generated numerical outputs and local runtime/cache files.
+results/
+output/
+.julia/
+.tools/
+Manifest.toml.*
+*.ji
+*.so
+*.dylib
+.DS_Store
