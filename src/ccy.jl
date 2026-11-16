@@ -4,6 +4,7 @@ struct CCYPole{T<:AbstractFloat}
     residue::Complex{T}
     x::Complex{T}
     id::Int
+    fusion_id::Int
 end
 
 """Momentum-local graph CCY plan with shared pole, fusion, denominator and global caches."""
@@ -14,6 +15,7 @@ mutable struct CCYPlan{T<:AbstractFloat,N}
     vertex_representatives::Vector{Int}
     norm_owners::Vector{Vector{Int}}
     centers::Vector{Complex{T}}
+    fusion_ids::Dict{Complex{T},Int}
     geometry::Dict{NTuple{4,Int},CCYPole{T}}
     fusions::Dict{NTuple{7,Int},Complex{T}}
     denominators::Dict{NTuple{2,Int},Complex{T}}
@@ -48,7 +50,7 @@ function CCYPlan(::Type{T},graph::PlumbingGraph,central,weights::AbstractVector;
         push!(owners[div(last(graph.ends[e])-1,3)+1],e)
     end
     CCYPlan{T,N}(graph,allweights,slots,representatives,owners,[C(central)],
-        Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),0,0,0.0,0.0)
+        Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),0,0,0.0,0.0)
 end
 
 """Cached c_(r,s)(h), b_(r,s)^2 and regularized universal Kac residue."""
@@ -86,14 +88,19 @@ function ccy_pole(plan::CCYPlan{T},edge::Int,shift::Int,r::Int,s::Int) where T
             push!(plan.centers,central)
             id=length(plan.centers)
         end
-        CCYPole{T}(central,numerator/denominator,x,id)
+        # Reciprocal x values share a central charge but not their fusion data.
+        # Keep integer fusion keys and reuse them only for identical x.
+        fusion_id=get!(plan.fusion_ids,x) do
+            length(plan.fusion_ids)+1
+        end
+        CCYPole{T}(central,numerator/denominator,x,id,fusion_id)
     end
 end
 
 """Cached fusion polynomial, using paired factors to avoid auxiliary square-root choices."""
 function ccy_fusion(plan::CCYPlan{T},pole::CCYPole{T},r::Int,s::Int,
                     top::Int,ts::Int,bottom::Int,bs::Int) where T
-    get!(plan.fusions,(pole.id,r,s,top,ts,bottom,bs)) do
+    get!(plan.fusions,(pole.fusion_id,r,s,top,ts,bottom,bs)) do
         a,b=plan.weights[top]+ts,plan.weights[bottom]+bs
         x=pole.x
         lambda=x+2+inv(x)-4a

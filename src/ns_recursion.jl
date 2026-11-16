@@ -4,6 +4,7 @@ struct NSPole{T<:AbstractFloat}
     residue::Complex{T}
     x::Complex{T}
     id::Int
+    fusion_id::Int
 end
 
 """Independent all-NS c-recursion, using superglobal seeds and native BPZ null transport."""
@@ -14,6 +15,7 @@ mutable struct NSRecursionPlan{T<:AbstractFloat,N}
     primary_mask::Int
     phases::Vector{Int}
     centers::Vector{Complex{T}}
+    fusion_ids::Dict{Complex{T},Int}
     poles::Dict{NTuple{4,Int},NSPole{T}}
     fusions::Dict{NTuple{8,Int},Complex{T}}
     denominators::Dict{NTuple{2,Int},Complex{T}}
@@ -51,7 +53,7 @@ function NSRecursionPlan(::Type{T},graph::PlumbingGraph,central,weights::NTuple{
     mask=sum(primary_parities[e]<<(e-1) for e in 1:N)
     NSRecursionPlan{T,N}(graph,map(C,weights),primary_parities,mask,
         [ns_mode_phase(graph,primary_parities,m) for m in 0:2^N-1],[C(central)],
-        Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),
+        Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),Dict(),
         compact_theta && length(graph.slots)==2 && graph.slots[1]==graph.slots[2],0,0)
 end
 
@@ -88,12 +90,16 @@ function ns_c_pole(plan::NSRecursionPlan{T},edge::Int,shift::Int,r::Int,s::Int) 
             push!(plan.centers,central)
             id=length(plan.centers)
         end
-        NSPole{T}(central,numerator/denominator,x,id)
+        # The central charge is invariant under x -> 1/x; fusion data are not.
+        fusion_id=get!(plan.fusion_ids,x) do
+            length(plan.fusion_ids)+1
+        end
+        NSPole{T}(central,numerator/denominator,x,id,fusion_id)
     end
 end
 """NS fusion polynomial, pairing opposite momentum factors before evaluation."""
 function ns_c_fusion(plan::NSRecursionPlan{T},pole::NSPole{T},r::Int,s::Int,a::Int,da::Int,b::Int,db::Int,f::Int) where T
-    get!(plan.fusions,(pole.id,r,s,a,da,b,db,f)) do
+    get!(plan.fusions,(pole.fusion_id,r,s,a,da,b,db,f)) do
         ha,hb=plan.weights[a]+Complex{T}(da)/2,plan.weights[b]+Complex{T}(db)/2
         x=pole.x
         lambda=x+2+inv(x)-8ha

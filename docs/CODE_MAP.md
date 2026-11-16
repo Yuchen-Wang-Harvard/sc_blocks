@@ -159,10 +159,13 @@ cached vertices, input coefficients or another returned coefficient.
 
 Production Virasoro central-charge recursion. It never uses finite-c Gram blocks
 as its seed. Cache ownership is local to a numerical plan/worker.
+Fusion keys use an integer identity for the squared coupling `x`, distinct from
+the central-charge identity used for denominator reuse and recursion batching:
+reciprocal values of `x` have the same central charge but different fusion data.
 
 | Function/type | Purpose |
 | --- | --- |
-| `CCYPole` | Store central pole, squared coupling, universal residue and center ID. |
+| `CCYPole` | Store central pole, squared coupling, universal residue and separate central-charge and fusion IDs. |
 | `CCYPlan` | Validate edge/external weights and own numerical caches and counters. |
 | `ccy_pole` | Cached Kac pole geometry, with removable x±1 factors canceled before numerical evaluation. |
 | `ccy_fusion` | Cached fusion polynomial, pairing factors to avoid extra square-root choices. |
@@ -366,10 +369,12 @@ Independent native-BPZ all-NS SCA central-charge recursion. Its superglobal
 vertices and null transport include the current phases locally; it does not
 convert a completed block. The current reference supports closed graphs
 without self-loops, including the required theta and tetrahedron checks.
+As in CCY, fusion cache identities distinguish `x` from `1/x`, while denominators
+and recursion batching continue to share the central-charge identity.
 
 | Function/type | Purpose |
 | --- | --- |
-| `NSPole` | NS central pole, regularized residue, squared coupling and center ID. |
+| `NSPole` | NS central pole, regularized residue, squared coupling and separate central-charge and fusion IDs. |
 | `NSRecursionPlan` | Own physical weights, intrinsic parities, current sewing phases and numerical caches. |
 | `ns_mode_phase` | Exact fourth-root exponent supplied by current local vertices and inverse BPZ norms. |
 | `ns_c_pole` | Stable NS Kac geometry and residue with removable x±1 factors canceled algebraically. |
@@ -566,6 +571,11 @@ intrinsic-parity assignments. It defines no functions.
   evaluation and independent SCA c-recursion versus full physical PBW. Current
   graph cutoffs are theta total level 5 and tetrahedron total level 3, with even
   and odd intrinsic primaries. No reusable functions.
+- `test/test_fusion_cache.jl`: reciprocal-pole collisions on a closed six-edge
+  graph, for both Virasoro and native NS recursion. Compares every coefficient
+  through total physical level two against direct PBW sewing, with cold caches
+  and both orders of populating the conflicting fusion entries. Requires exact
+  agreement between cache orders. No reusable functions.
 
 ### `src/quadrature.jl`
 
